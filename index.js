@@ -6,9 +6,8 @@ const { getNFTImageURL } = require('./utils');
 // Load environment variables
 const DISCORD_TOKEN = process.env.DISCORD_TOKEN;
 const CHANNEL_ID = process.env.DISCORD_CHANNEL_ID;
-const INFURA_API_KEY = process.env.INFURA_API_KEY; // full URL
+const INFURA_API_KEY = process.env.INFURA_API_KEY;
 
-// Debug token length
 console.log("✅ Booting Ugly Mint Bot...");
 console.log("📏 Using Discord token length:", DISCORD_TOKEN?.length || 'undefined');
 
@@ -42,15 +41,12 @@ contract.on('Transfer', async (from, to, tokenId) => {
 
   try {
     const channel = await client.channels.fetch(CHANNEL_ID);
-    const ethPrice = 0.0042; // adjust if mint price changes
-    const imageUrl = getNFTImageURL(tokenId);
+    const ethPrice = 0.0042;
 
     const message = `🟢 **New Mint Detected!**
 **Wallet:** \`${to}\`
 **Token ID:** \`${tokenId}\`
-**Cost:** \`${ethPrice} ETH\`
-
-📸 ${imageUrl}`;
+**Cost:** \`${ethPrice} ETH\``;
 
     channel.send({ content: message });
   } catch (err) {
@@ -64,14 +60,11 @@ client.on('messageCreate', async message => {
     const fakeWallet = '0xABCDEF1234567890ABCDEF1234567890ABCDEF12';
     const fakeTokenId = 123;
     const ethPrice = 0.0042;
-    const imageUrl = getNFTImageURL(fakeTokenId);
 
     const testMsg = `🧪 **Mint Test Triggered!**
 **Wallet:** \`${fakeWallet}\`
 **Token ID:** \`${fakeTokenId}\`
-**Cost:** \`${ethPrice} ETH\`
-
-📸 ${imageUrl}`;
+**Cost:** \`${ethPrice} ETH\``;
 
     message.channel.send({ content: testMsg });
   }
@@ -79,3 +72,4 @@ client.on('messageCreate', async message => {
 
 // Login the bot
 client.login(DISCORD_TOKEN);
+
