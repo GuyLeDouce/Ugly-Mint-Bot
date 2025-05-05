@@ -50,7 +50,6 @@ contract.on('Transfer', async (from, to, tokenId, event) => {
 
   existing.tokenIds.push(tokenId.toString());
 
-  // Reset timer for this transaction
   if (existing.timer) clearTimeout(existing.timer);
 
   existing.timer = setTimeout(async () => {
@@ -59,7 +58,7 @@ contract.on('Transfer', async (from, to, tokenId, event) => {
     try {
       const channel = await client.channels.fetch(CHANNEL_ID);
       const count = existing.tokenIds.length;
-      const ethPricePer = 0.0042; // Update if needed
+      const ethPricePer = 0.0042;
       const totalSpent = (ethPricePer * count).toFixed(4);
 
       const message = `🟢 **New Mint Detected!**
@@ -71,12 +70,12 @@ contract.on('Transfer', async (from, to, tokenId, event) => {
     } catch (err) {
       console.error("❌ Error posting mint to Discord:", err);
     }
-  }, 3000); // wait 3 seconds for all mints in the same tx
+  }, 3000);
 
   pendingMints.set(txHash, existing);
 });
 
-// Test command: !minttest
+// Manual !minttest command
 client.on('messageCreate', async message => {
   if (message.content === '!minttest') {
     const fakeWallet = '0xABCDEF1234567890ABCDEF1234567890ABCDEF12';
@@ -90,6 +89,45 @@ client.on('messageCreate', async message => {
 **Total Spent:** \`${totalSpent} ETH\``;
 
     message.channel.send({ content: testMsg });
+  }
+
+  // Simulate real multi-mint event
+  if (message.content === '!simulate') {
+    console.log("🔁 Simulating a real multi-mint event...");
+
+    const fakeTxHash = '0xtesttxhash1234567890';
+    const fakeWallet = '0xFAKEFAKEFAKEFAKEFAKEFAKEFAKEFAKEFAKEFAKE';
+    const ethPricePer = 0.0042;
+
+    const tokenIds = ['2001', '2002', '2003'];
+
+    const existing = {
+      wallet: fakeWallet,
+      tokenIds: [...tokenIds],
+      timer: null,
+    };
+
+    if (existing.timer) clearTimeout(existing.timer);
+
+    existing.timer = setTimeout(async () => {
+      pendingMints.delete(fakeTxHash);
+
+      try {
+        const channel = await client.channels.fetch(CHANNEL_ID);
+        const totalSpent = (ethPricePer * existing.tokenIds.length).toFixed(4);
+
+        const messageContent = `🧪 **Simulated Multi-Mint!**
+**Wallet:** \`${existing.wallet}\`
+**Total NFTs:** \`${existing.tokenIds.length}\`
+**Total Spent:** \`${totalSpent} ETH\``;
+
+        channel.send({ content: messageContent });
+      } catch (err) {
+        console.error("❌ Error posting simulated mint:", err);
+      }
+    }, 3000);
+
+    pendingMints.set(fakeTxHash, existing);
   }
 });
 
