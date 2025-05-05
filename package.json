@@ -1,15 +1,16 @@
 {
   "name": "charm-mint-bot",
   "version": "1.0.0",
-  "description": "A Discord bot that tracks Charm of the Ugly mints",
+  "description": "A Discord bot that tracks Charm of the Ugly NFT mints and posts to Discord.",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
   },
+  "author": "Guy LeDouce",
+  "license": "MIT",
   "dependencies": {
     "discord.js": "^14.13.0",
     "dotenv": "^16.3.1",
     "ethers": "^6.6.2"
   }
 }
-
