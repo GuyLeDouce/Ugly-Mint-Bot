@@ -35,36 +35,59 @@ client.once('ready', () => {
   console.log(`✅ Logged in as ${client.user.tag}`);
 });
 
-// Listen for mint events (Transfer from zero address)
-contract.on('Transfer', async (from, to, tokenId) => {
+// Multi-mint grouping
+const pendingMints = new Map();
+
+contract.on('Transfer', async (from, to, tokenId, event) => {
   if (from !== ethers.ZeroAddress) return;
 
-  try {
-    const channel = await client.channels.fetch(CHANNEL_ID);
-    const ethPrice = 0.0042;
+  const txHash = event.transactionHash;
+  const existing = pendingMints.get(txHash) || {
+    wallet: to,
+    tokenIds: [],
+    timer: null,
+  };
 
-    const message = `🟢 **New Mint Detected!**
-**Wallet:** \`${to}\`
-**Token ID:** \`${tokenId}\`
-**Cost:** \`${ethPrice} ETH\``;
+  existing.tokenIds.push(tokenId.toString());
 
-    channel.send({ content: message });
-  } catch (err) {
-    console.error("❌ Error posting mint to Discord:", err);
-  }
+  // Reset timer for this transaction
+  if (existing.timer) clearTimeout(existing.timer);
+
+  existing.timer = setTimeout(async () => {
+    pendingMints.delete(txHash);
+
+    try {
+      const channel = await client.channels.fetch(CHANNEL_ID);
+      const count = existing.tokenIds.length;
+      const ethPricePer = 0.0042; // Update if needed
+      const totalSpent = (ethPricePer * count).toFixed(4);
+
+      const message = `🟢 **New Mint Detected!**
+**Wallet:** \`${existing.wallet}\`
+**Total NFTs:** \`${count}\`
+**Total Spent:** \`${totalSpent} ETH\``;
+
+      channel.send({ content: message });
+    } catch (err) {
+      console.error("❌ Error posting mint to Discord:", err);
+    }
+  }, 3000); // wait 3 seconds for all mints in the same tx
+
+  pendingMints.set(txHash, existing);
 });
 
 // Test command: !minttest
 client.on('messageCreate', async message => {
   if (message.content === '!minttest') {
     const fakeWallet = '0xABCDEF1234567890ABCDEF1234567890ABCDEF12';
-    const fakeTokenId = 123;
-    const ethPrice = 0.0042;
+    const fakeTokenIds = ['123', '124'];
+    const ethPricePer = 0.0042;
+    const totalSpent = (ethPricePer * fakeTokenIds.length).toFixed(4);
 
     const testMsg = `🧪 **Mint Test Triggered!**
 **Wallet:** \`${fakeWallet}\`
-**Token ID:** \`${fakeTokenId}\`
-**Cost:** \`${ethPrice} ETH\``;
+**Total NFTs:** \`${fakeTokenIds.length}\`
+**Total Spent:** \`${totalSpent} ETH\``;
 
     message.channel.send({ content: testMsg });
   }
@@ -72,4 +95,3 @@ client.on('messageCreate', async message => {
 
 // Login the bot
 client.login(DISCORD_TOKEN);
-
