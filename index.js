@@ -3,16 +3,16 @@ const { Client, GatewayIntentBits } = require('discord.js');
 const { ethers } = require('ethers');
 const { getNFTImageURL } = require('./utils');
 
-// Load environment variables from .env or Railway Variables
+// Load environment variables
 const DISCORD_TOKEN = process.env.DISCORD_TOKEN;
 const CHANNEL_ID = process.env.DISCORD_CHANNEL_ID;
-const INFURA_API_KEY = process.env.INFURA_API_KEY; // full URL, not just project ID
+const INFURA_API_KEY = process.env.INFURA_API_KEY; // full URL
 
-// Print debug info
+// Debug token length
 console.log("✅ Booting Ugly Mint Bot...");
 console.log("📏 Using Discord token length:", DISCORD_TOKEN?.length || 'undefined');
 
-// Setup Discord client
+// Setup Discord bot client
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
@@ -21,7 +21,7 @@ const client = new Client({
   ]
 });
 
-// Setup Ethereum provider using full Infura URL
+// Setup Ethereum provider
 const provider = new ethers.JsonRpcProvider(INFURA_API_KEY);
 
 // Contract info
@@ -40,11 +40,42 @@ client.once('ready', () => {
 contract.on('Transfer', async (from, to, tokenId) => {
   if (from !== ethers.ZeroAddress) return;
 
-  const channel = await client.channels.fetch(CHANNEL_ID);
-  const ethPrice = 0.0042; // update if your mint price changes
-  const imageUrl = getNFTImageURL(tokenId);
+  try {
+    const channel = await client.channels.fetch(CHANNEL_ID);
+    const ethPrice = 0.0042; // adjust if mint price changes
+    const imageUrl = getNFTImageURL(tokenId);
 
-  const message = `🟢 **New Mint Detected!**
+    const message = `🟢 **New Mint Detected!**
 **Wallet:** \`${to}\`
-**Token ID:** \`${tokenId
+**Token ID:** \`${tokenId}\`
+**Cost:** \`${ethPrice} ETH\`
 
+📸 ${imageUrl}`;
+
+    channel.send({ content: message });
+  } catch (err) {
+    console.error("❌ Error posting mint to Discord:", err);
+  }
+});
+
+// Test command: !minttest
+client.on('messageCreate', async message => {
+  if (message.content === '!minttest') {
+    const fakeWallet = '0xABCDEF1234567890ABCDEF1234567890ABCDEF12';
+    const fakeTokenId = 123;
+    const ethPrice = 0.0042;
+    const imageUrl = getNFTImageURL(fakeTokenId);
+
+    const testMsg = `🧪 **Mint Test Triggered!**
+**Wallet:** \`${fakeWallet}\`
+**Token ID:** \`${fakeTokenId}\`
+**Cost:** \`${ethPrice} ETH\`
+
+📸 ${imageUrl}`;
+
+    message.channel.send({ content: testMsg });
+  }
+});
+
+// Login the bot
+client.login(DISCORD_TOKEN);
