@@ -58,7 +58,7 @@ contract.on('Transfer', async (from, to, tokenId, event) => {
     try {
       const channel = await client.channels.fetch(CHANNEL_ID);
       const count = existing.tokenIds.length;
-      const ethPricePer = 0.0042;
+      const ethPricePer = 0.007;
       const totalSpent = (ethPricePer * count).toFixed(4);
 
       const message = `🟢 **New Mint Detected!**
@@ -80,7 +80,7 @@ client.on('messageCreate', async message => {
   if (message.content === '!minttest') {
     const fakeWallet = '0xABCDEF1234567890ABCDEF1234567890ABCDEF12';
     const fakeTokenIds = ['123', '124'];
-    const ethPricePer = 0.0042;
+    const ethPricePer = 0.007;
     const totalSpent = (ethPricePer * fakeTokenIds.length).toFixed(4);
 
     const testMsg = `🧪 **Mint Test Triggered!**
@@ -97,7 +97,7 @@ client.on('messageCreate', async message => {
 
     const fakeTxHash = '0xtesttxhash1234567890';
     const fakeWallet = '0xFAKEFAKEFAKEFAKEFAKEFAKEFAKEFAKEFAKEFAKE';
-    const ethPricePer = 0.0042;
+    const ethPricePer = 0.007;
 
     const tokenIds = ['2001', '2002', '2003'];
 
